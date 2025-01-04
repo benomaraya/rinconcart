@@ -1,0 +1,75 @@
+body{
+    background-color: rgb(101, 138, 241);
+}
+div{
+    border: 5px solid rgba(7, 57, 192, 0.904) ;
+    padding: 30px;
+    margin: 15px;
+    background-color: rgb(255, 255, 255);
+    font-family:Lucida Handwriting ;
+}
+p{
+    color: rgb(0, 0, 0);
+    text-align: center;
+    font-family: Lucida Handwriting; 
+    font-size: 90%
+}
+h1{
+    color: rgb(6, 8, 29);
+    border:5px double rgb(7, 57, 192, 0.904);
+    text-align: center;
+    text-shadow: 1px 4px rgba(2, 1, 26, 0.486);
+    background-color: rgb(172, 178, 212);
+}
+table th{
+    text-align: center;
+    border: 2px solid rgb(4, 3, 59);
+    color: rgb(29, 17, 129);
+    background-color: rgba(10, 41, 219, 0.493);
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    
+}
+tr :hover{
+    color: rgb(42, 13, 206);
+}
+table td{
+    border: 3px solid rgb(6, 4, 105);
+    text-align: center;
+    margin-left: 25%;
+    width: 30%;
+    height: 30%;
+}
+
+#grr{
+    margin-left: 25%;
+    width: 50%;
+    height: 50%;
+    text-align: center;
+    border: 5px solid rgb(7, 57, 192, 0.904);
+}
+
+#gr{
+    margin-left: 25%;
+    width: 50%;
+    height: 50%;
+    text-align: center;
+    font-family:Lucida Handwriting ;
+}
+#ab{
+    color: rgb(14, 27, 202);
+    text-align: center;
+    text-shadow: 1px 4px rgb(2, 1, 26);
+    background-color: rgb(172, 178, 212); 
+    
+}
+#qb{
+    margin-left: 25%;
+    width: 50%;
+    height: 50%;
+    text-align: center;
+}
+#txt{
+    text-align: center; 
+    background-color: rgb(172, 178, 212); 
+   color: rgb(6, 8, 29);
+}

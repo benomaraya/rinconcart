@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="stylesheet" href="css/leaflet.css">
+    <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
+    <link rel="stylesheet" href="css/L.Control.Locate.min.css">
+    <link rel="stylesheet" href="css/qgis2web.css">
+    <link rel="stylesheet" href="css/fontawesome-all.min.css">
+    <link rel="stylesheet" href="css/leaflet-control-geocoder.Geocoder.css">
+    <style>
+    html, body, #map {
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        margin: 0;
+    }
+    </style>
+    <title></title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cart interactive </title>
+</head>
+<body>
+    <h1>carte  de <mark>Mdiq</mark> </h1>
+
+    <h3>reteur vers la page principale</h3>
+    <a href="../index2.html">clique ici</a>
+    <div id="map">
+    </div>
+    <script src="js/qgis2web_expressions.js"></script>
+    <script src="js/leaflet.js"></script>
+    <script src="js/L.Control.Layers.Tree.min.js"></script>
+    <script src="js/L.Control.Locate.min.js"></script>
+    <script src="js/leaflet.rotatedMarker.js"></script>
+    <script src="js/leaflet.pattern.js"></script>
+    <script src="js/leaflet-hash.js"></script>
+    <script src="js/Autolinker.min.js"></script>
+    <script src="js/rbush.min.js"></script>
+    <script src="js/labelgun.min.js"></script>
+    <script src="js/labels.js"></script>
+    <script src="js/leaflet-control-geocoder.Geocoder.js"></script>
+    <script src="js/proj4.js"></script>
+    <script src="js/proj4leaflet.js"></script>
+    <script src="data/places_0.js"></script>
+    <script src="data/TRAJETS_1.js"></script>
+    <script src="data/reference_2.js"></script>
+    <script>
+    var highlightLayer;
+    function highlightFeature(e) {
+        highlightLayer = e.target;
+        highlightLayer.openPopup();
+    }
+    var crs = new L.Proj.CRS('EPSG:26191', '+proj=lcc +lat_1=33.3 +lat_0=33.3 +lon_0=-5.4 +k_0=0.999625769 +x_0=500000 +y_0=300000 +ellps=clrk80ign +towgs84=31,146,47,0,0,0,0 +units=m +no_defs', {
+        resolutions: [2800, 1400, 700, 350, 175, 84, 42, 21, 11.2, 5.6, 2.8, 1.4, 0.7, 0.35, 0.14, 0.07],
+    });
+    var map = L.map('map', {
+        crs: crs,
+        continuousWorld: false,
+        worldCopyJump: false, 
+        zoomControl:false, maxZoom:28, minZoom:1
+    }).fitBounds([[35.68236831923833,-5.3288666768493504],[35.689675257064735,-5.312368679167686]]);
+    var hash = new L.Hash(map);
+    map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+    var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+    // remove popup's row if "visible-with-data"
+    function removeEmptyRowsFromPopupContent(content, feature) {
+     var tempDiv = document.createElement('div');
+     tempDiv.innerHTML = content;
+     var rows = tempDiv.querySelectorAll('tr');
+     for (var i = 0; i < rows.length; i++) {
+         var td = rows[i].querySelector('td.visible-with-data');
+         var key = td ? td.id : '';
+         if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+             rows[i].parentNode.removeChild(rows[i]);
+         }
+     }
+     return tempDiv.innerHTML;
+    }
+    // add class to format popup if it contains media
+    function addClassToPopupIfMedia(content, popup) {
+        var tempDiv = document.createElement('div');
+        tempDiv.innerHTML = content;
+        if (tempDiv.querySelector('td img')) {
+            popup._contentNode.classList.add('media');
+                // Delay to force the redraw
+                setTimeout(function() {
+                    popup.update();
+                }, 10);
+        } else {
+            popup._contentNode.classList.remove('media');
+        }
+    }
+    var zoomControl = L.control.zoom({
+        position: 'topleft'
+    }).addTo(map);
+    L.control.locate({locateOptions: {maxZoom: 19}}).addTo(map);
+    var bounds_group = new L.featureGroup([]);
+    function setBounds() {
+    }
+    function pop_places_0(feature, layer) {
+        layer.on({
+            mouseout: function(e) {
+                if (typeof layer.closePopup == 'function') {
+                    layer.closePopup();
+                } else {
+                    layer.eachLayer(function(feature){
+                        feature.closePopup()
+                    });
+                }
+            },
+            mouseover: highlightFeature,
+        });
+        var popupContent = '<table>\
+                <tr>\
+                    <th scope="row">id</th>\
+                    <td>' + (feature.properties['id'] !== null ? autolinker.link(feature.properties['id'].toLocaleString()) : '') + '</td>\
+                </tr>\
+                <tr>\
+                    <th scope="row">places</th>\
+                    <td>' + (feature.properties['places'] !== null ? autolinker.link(feature.properties['places'].toLocaleString()) : '') + '</td>\
+                </tr>\
+                <tr>\
+                    <th scope="row">type</th>\
+                    <td>' + (feature.properties['type'] !== null ? autolinker.link(feature.properties['type'].toLocaleString()) : '') + '</td>\
+                </tr>\
+            </table>';
+        var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+        layer.on('popupopen', function(e) {
+            addClassToPopupIfMedia(content, e.popup);
+        });
+        layer.bindPopup(content, { maxHeight: 400 });
+    }
+
+    function style_places_0_0(feature) {
+        switch(String(feature.properties['type'])) {
+            case 'HT':
+                return {
+            pane: 'pane_places_0',
+            opacity: 1,
+            color: 'rgba(35,35,35,1.0)',
+            dashArray: '',
+            lineCap: 'butt',
+            lineJoin: 'miter',
+            weight: 1.0, 
+            fill: true,
+            fillOpacity: 1,
+            fillColor: 'rgba(231,117,75,1.0)',
+            interactive: true,
+        }
+                break;
+            case 'RS':
+                return {
+            pane: 'pane_places_0',
+            opacity: 1,
+            color: 'rgba(82,82,82,1.0)',
+            dashArray: '',
+            lineCap: 'butt',
+            lineJoin: 'miter',
+            weight: 1.0, 
+            fill: true,
+            fillOpacity: 1,
+            fillColor: 'rgba(222,118,13,0.9803921568627451)',
+            interactive: true,
+        }
+                break;
+            case 'PR':
+                return {
+            pane: 'pane_places_0',
+            opacity: 1,
+            color: 'rgba(82,82,82,1.0)',
+            dashArray: '',
+            lineCap: 'butt',
+            lineJoin: 'miter',
+            weight: 1.0, 
+            fill: true,
+            fillOpacity: 1,
+            fillColor: 'rgba(178,201,242,1.0)',
+            interactive: true,
+        }
+                break;
+            case 'IG':
+                return {
+            pane: 'pane_places_0',
+            opacity: 1,
+            color: 'rgba(35,35,35,1.0)',
+            dashArray: '',
+            lineCap: 'butt',
+            lineJoin: 'miter',
+            weight: 1.0, 
+            fill: true,
+            fillOpacity: 1,
+            fillColor: 'rgba(199,239,64,1.0)',
+            interactive: true,
+        }
+                break;
+            case 'PC':
+                return {
+            pane: 'pane_places_0',
+            opacity: 1,
+            color: 'rgba(35,35,35,1.0)',
+            dashArray: '',
+            lineCap: 'butt',
+            lineJoin: 'miter',
+            weight: 1.0, 
+            fill: true,
+            fillOpacity: 1,
+            fillColor: 'rgba(241,101,91,1.0)',
+            interactive: true,
+        }
+                break;
+            case 'BK':
+                return {
+            pane: 'pane_places_0',
+            opacity: 1,
+            color: 'rgba(35,35,35,1.0)',
+            dashArray: '',
+            lineCap: 'butt',
+            lineJoin: 'miter',
+            weight: 1.0, 
+            fill: true,
+            fillOpacity: 1,
+            fillColor: 'rgba(114,204,129,1.0)',
+            interactive: true,
+        }
+                break;
+            case 'JR':
+                return {
+            pane: 'pane_places_0',
+            opacity: 1,
+            color: 'rgba(35,35,35,1.0)',
+            dashArray: '',
+            lineCap: 'butt',
+            lineJoin: 'miter',
+            weight: 1.0, 
+            fill: true,
+            fillOpacity: 1,
+            fillColor: 'rgba(178,248,120,1.0)',
+            interactive: true,
+        }
+                break;
+            case 'TL':
+                return {
+            pane: 'pane_places_0',
+            opacity: 1,
+            color: 'rgba(82,82,82,1.0)',
+            dashArray: '',
+            lineCap: 'butt',
+            lineJoin: 'miter',
+            weight: 1.0, 
+            fill: true,
+            fillOpacity: 1,
+            fillColor: 'rgba(21,165,184,0.8352941176470589)',
+            interactive: true,
+        }
+                break;
+            case 'FR':
+                return {
+            pane: 'pane_places_0',
+            opacity: 1,
+            color: 'rgba(35,35,35,1.0)',
+            dashArray: '',
+            lineCap: 'butt',
+            lineJoin: 'miter',
+            weight: 1.0, 
+            fill: true,
+            fillOpacity: 1,
+            fillColor: 'rgba(255,120,136,1.0)',
+            interactive: true,
+        }
+                break;
+            case 'GT':
+                return {
+            pane: 'pane_places_0',
+            opacity: 1,
+            color: 'rgba(132,130,19,1.0)',
+            dashArray: '',
+            lineCap: 'butt',
+            lineJoin: 'miter',
+            weight: 1.0, 
+            fill: true,
+            fillOpacity: 1,
+            fillColor: 'rgba(156,164,9,1.0)',
+            interactive: true,
+        }
+                break;
+            case 'BANK':
+                return {
+            pane: 'pane_places_0',
+            opacity: 1,
+            color: 'rgba(35,35,35,1.0)',
+            dashArray: '',
+            lineCap: 'butt',
+            lineJoin: 'miter',
+            weight: 1.0, 
+            fill: true,
+            fillOpacity: 1,
+            fillColor: 'rgba(97,88,218,1.0)',
+            interactive: true,
+        }
+                break;
+            case 'TF':
+                return {
+            pane: 'pane_places_0',
+            opacity: 1,
+            color: 'rgba(35,35,35,1.0)',
+            dashArray: '',
+            lineCap: 'butt',
+            lineJoin: 'miter',
+            weight: 1.0, 
+            fill: true,
+            fillOpacity: 1,
+            fillColor: 'rgba(187,163,159,1.0)',
+            interactive: true,
+        }
+                break;
+            case 'MS':
+                return {
+            pane: 'pane_places_0',
+            opacity: 1,
+            color: 'rgba(35,35,35,1.0)',
+            dashArray: '',
+            lineCap: 'butt',
+            lineJoin: 'miter',
+            weight: 1.0, 
+            fill: true,
+            fillOpacity: 1,
+            fillColor: 'rgba(146,223,141,1.0)',
+            interactive: true,
+        }
+                break;
+            case 'MST':
+                return {
+            pane: 'pane_places_0',
+            opacity: 1,
+            color: 'rgba(35,35,35,1.0)',
+            dashArray: '',
+            lineCap: 'butt',
+            lineJoin: 'miter',
+            weight: 1.0, 
+            fill: true,
+            fillOpacity: 1,
+            fillColor: 'rgba(255,1,5,0.9803921568627451)',
+            interactive: true,
+        }
+                break;
+            case 'MG':
+                return {
+            pane: 'pane_places_0',
+            opacity: 1,
+            color: 'rgba(35,35,35,1.0)',
+            dashArray: '',
+            lineCap: 'butt',
+            lineJoin: 'miter',
+            weight: 1.0, 
+            fill: true,
+            fillOpacity: 1,
+            fillColor: 'rgba(143,164,158,1.0)',
+            interactive: true,
+        }
+                break;
+            case 'SS':
+                return {
+            pane: 'pane_places_0',
+            opacity: 1,
+            color: 'rgba(35,35,35,1.0)',
+            dashArray: '',
+            lineCap: 'butt',
+            lineJoin: 'miter',
+            weight: 1.0, 
+            fill: true,
+            fillOpacity: 1,
+            fillColor: 'rgba(159,88,220,1.0)',
+            interactive: true,
+        }
+                break;
+            case 'PH':
+                return {
+            pane: 'pane_places_0',
+            opacity: 1,
+            color: 'rgba(35,35,35,1.0)',
+            dashArray: '',
+            lineCap: 'butt',
+            lineJoin: 'miter',
+            weight: 1.0, 
+            fill: true,
+            fillOpacity: 1,
+            fillColor: 'rgba(14,37,14,0.7764705882352941)',
+            interactive: true,
+        }
+                break;
+        }
+    }
+    map.createPane('pane_places_0');
+    map.getPane('pane_places_0').style.zIndex = 400;
+    map.getPane('pane_places_0').style['mix-blend-mode'] = 'normal';
+    var layer_places_0 = new L.geoJson(json_places_0, {
+        attribution: '',
+        interactive: true,
+        dataVar: 'json_places_0',
+        layerName: 'layer_places_0',
+        pane: 'pane_places_0',
+        onEachFeature: pop_places_0,
+        style: style_places_0_0,
+    });
+    bounds_group.addLayer(layer_places_0);
+    map.addLayer(layer_places_0);
+    function pop_TRAJETS_1(feature, layer) {
+        layer.on({
+            mouseout: function(e) {
+                if (typeof layer.closePopup == 'function') {
+                    layer.closePopup();
+                } else {
+                    layer.eachLayer(function(feature){
+                        feature.closePopup()
+                    });
+                }
+            },
+            mouseover: highlightFeature,
+        });
+        var popupContent = '<table>\
+                <tr>\
+                    <th scope="row">id</th>\
+                    <td class="visible-with-data" id="id">' + (feature.properties['id'] !== null ? autolinker.link(feature.properties['id'].toLocaleString()) : '') + '</td>\
+                </tr>\
+                <tr>\
+                    <th scope="row">TRAJETS</th>\
+                    <td>' + (feature.properties['TRAJETS'] !== null ? autolinker.link(feature.properties['TRAJETS'].toLocaleString()) : '') + '</td>\
+                </tr>\
+            </table>';
+        var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+        layer.on('popupopen', function(e) {
+            addClassToPopupIfMedia(content, e.popup);
+        });
+        layer.bindPopup(content, { maxHeight: 400 });
+    }
+
+    function style_TRAJETS_1_0(feature) {
+        switch(String(feature.properties['TRAJETS'])) {
+            case 'REND-POINT VERS STATION-SERVICE':
+                return {
+            pane: 'pane_TRAJETS_1',
+            opacity: 1,
+            color: 'rgba(158,88,220,1.0)',
+            dashArray: '',
+            lineCap: 'square',
+            lineJoin: 'bevel',
+            weight: 8.0,
+            fillOpacity: 0,
+            interactive: true,
+        }
+                break;
+            case 'REND-POINT VERS GRAND TAXI':
+                return {
+            pane: 'pane_TRAJETS_1',
+            opacity: 1,
+            color: 'rgba(156,164,10,1.0)',
+            dashArray: '',
+            lineCap: 'square',
+            lineJoin: 'bevel',
+            weight: 8.0,
+            fillOpacity: 0,
+            interactive: true,
+        }
+                break;
+            case 'REND-POIN VERS GRAND TAXI':
+                return {
+            pane: 'pane_TRAJETS_1',
+            opacity: 1,
+            color: 'rgba(156,164,10,1.0)',
+            dashArray: '',
+            lineCap: 'square',
+            lineJoin: 'bevel',
+            weight: 8.0,
+            fillOpacity: 0,
+            interactive: true,
+        }
+                break;
+            case 'REND POINT VERS MOSQUEE':
+                return {
+            pane: 'pane_TRAJETS_1',
+            opacity: 1,
+            color: 'rgba(146,223,141,1.0)',
+            dashArray: '',
+            lineCap: 'square',
+            lineJoin: 'bevel',
+            weight: 8.0,
+            fillOpacity: 0,
+            interactive: true,
+        }
+                break;
+            case 'REND-POINT VERS IGLISIA':
+                return {
+            pane: 'pane_TRAJETS_1',
+            opacity: 1,
+            color: 'rgba(199,239,64,1.0)',
+            dashArray: '',
+            lineCap: 'square',
+            lineJoin: 'bevel',
+            weight: 8.0,
+            fillOpacity: 0,
+            interactive: true,
+        }
+                break;
+            case 'STATION-SERVICE':
+                return {
+            pane: 'pane_TRAJETS_1',
+            opacity: 1,
+            color: 'rgba(228,60,82,1.0)',
+            dashArray: '',
+            lineCap: 'square',
+            lineJoin: 'bevel',
+            weight: 8.0,
+            fillOpacity: 0,
+            interactive: true,
+        }
+                break;
+            case 'IGLISIA':
+                return {
+            pane: 'pane_TRAJETS_1',
+            opacity: 1,
+            color: 'rgba(125,200,38,1.0)',
+            dashArray: '',
+            lineCap: 'square',
+            lineJoin: 'bevel',
+            weight: 8.0,
+            fillOpacity: 0,
+            interactive: true,
+        }
+                break;
+            case 'REND-POINT VERS PARKING':
+                return {
+            pane: 'pane_TRAJETS_1',
+            opacity: 1,
+            color: 'rgba(178,201,242,1.0)',
+            dashArray: '',
+            lineCap: 'square',
+            lineJoin: 'bevel',
+            weight: 8.0,
+            fillOpacity: 0,
+            interactive: true,
+        }
+                break;
+            default:
+                return {
+            pane: 'pane_TRAJETS_1',
+            opacity: 1,
+            color: 'rgba(78,130,68,1.0)',
+            dashArray: '',
+            lineCap: 'square',
+            lineJoin: 'bevel',
+            weight: 8.0,
+            fillOpacity: 0,
+            interactive: true,
+        }
+                break;
+            case 'REND-POINT VERS PARKING 2':
+                return {
+            pane: 'pane_TRAJETS_1',
+            opacity: 1,
+            color: 'rgba(178,201,242,1.0)',
+            dashArray: '',
+            lineCap: 'square',
+            lineJoin: 'bevel',
+            weight: 8.0,
+            fillOpacity: 0,
+            interactive: true,
+        }
+                break;
+            case 'REND-POINT VERS HOTEL GOLDEN':
+                return {
+            pane: 'pane_TRAJETS_1',
+            opacity: 1,
+            color: 'rgba(231,117,75,1.0)',
+            dashArray: '',
+            lineCap: 'square',
+            lineJoin: 'bevel',
+            weight: 8.0,
+            fillOpacity: 0,
+            interactive: true,
+        }
+                break;
+            case 'REND-POINT VERS RESTAURANT NOUR CHAMS':
+                return {
+            pane: 'pane_TRAJETS_1',
+            opacity: 1,
+            color: 'rgba(223,121,18,1.0)',
+            dashArray: '',
+            lineCap: 'square',
+            lineJoin: 'bevel',
+            weight: 8.0,
+            fillOpacity: 0,
+            interactive: true,
+        }
+                break;
+            case 'REND-POINT VERS JARDIN':
+                return {
+            pane: 'pane_TRAJETS_1',
+            opacity: 1,
+            color: 'rgba(178,248,120,1.0)',
+            dashArray: '',
+            lineCap: 'square',
+            lineJoin: 'bevel',
+            weight: 8.0,
+            fillOpacity: 0,
+            interactive: true,
+        }
+                break;
+            case 'REND-POINT VERS TERRAIN DE FOOT':
+                return {
+            pane: 'pane_TRAJETS_1',
+            opacity: 1,
+            color: 'rgba(187,163,159,1.0)',
+            dashArray: '',
+            lineCap: 'square',
+            lineJoin: 'bevel',
+            weight: 8.0,
+            fillOpacity: 0,
+            interactive: true,
+        }
+                break;
+            case 'REND-POINT VERS PROTECTION CIVILE':
+                return {
+            pane: 'pane_TRAJETS_1',
+            opacity: 1,
+            color: 'rgba(241,101,91,1.0)',
+            dashArray: '',
+            lineCap: 'square',
+            lineJoin: 'bevel',
+            weight: 8.0,
+            fillOpacity: 0,
+            interactive: true,
+        }
+                break;
+            case 'REND-POINT VERS RESTAURANT LORIZON':
+                return {
+            pane: 'pane_TRAJETS_1',
+            opacity: 1,
+            color: 'rgba(223,121,19,1.0)',
+            dashArray: '',
+            lineCap: 'square',
+            lineJoin: 'bevel',
+            weight: 3.0,
+            fillOpacity: 0,
+            interactive: true,
+        }
+                break;
+        }
+    }
+    map.createPane('pane_TRAJETS_1');
+    map.getPane('pane_TRAJETS_1').style.zIndex = 401;
+    map.getPane('pane_TRAJETS_1').style['mix-blend-mode'] = 'normal';
+    var layer_TRAJETS_1 = new L.geoJson(json_TRAJETS_1, {
+        attribution: '',
+        interactive: true,
+        dataVar: 'json_TRAJETS_1',
+        layerName: 'layer_TRAJETS_1',
+        pane: 'pane_TRAJETS_1',
+        onEachFeature: pop_TRAJETS_1,
+        style: style_TRAJETS_1_0,
+    });
+    bounds_group.addLayer(layer_TRAJETS_1);
+    map.addLayer(layer_TRAJETS_1);
+    function pop_reference_2(feature, layer) {
+        layer.on({
+            mouseout: function(e) {
+                if (typeof layer.closePopup == 'function') {
+                    layer.closePopup();
+                } else {
+                    layer.eachLayer(function(feature){
+                        feature.closePopup()
+                    });
+                }
+            },
+            mouseover: highlightFeature,
+        });
+        var popupContent = '<table>\
+                <tr>\
+                    <th scope="row">id</th>\
+                    <td>' + (feature.properties['id'] !== null ? autolinker.link(feature.properties['id'].toLocaleString()) : '') + '</td>\
+                </tr>\
+                <tr>\
+                    <th scope="row">reference</th>\
+                    <td>' + (feature.properties['reference'] !== null ? autolinker.link(feature.properties['reference'].toLocaleString()) : '') + '</td>\
+                </tr>\
+            </table>';
+        var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+        layer.on('popupopen', function(e) {
+            addClassToPopupIfMedia(content, e.popup);
+        });
+        layer.bindPopup(content, { maxHeight: 400 });
+    }
+
+    function style_reference_2_0(feature) {
+        switch(String(feature.properties['id'])) {
+            case '1':
+                return {
+            pane: 'pane_reference_2',
+    rotationAngle: 0.0,
+    rotationOrigin: 'center center',
+    icon: L.icon({
+        iconUrl: 'markers/reference_2.svg',
+        iconSize: [26.599999999999998, 26.599999999999998]
+    }),
+            interactive: true,
+        }
+                break;
+            case '2':
+                return {
+            pane: 'pane_reference_2',
+    rotationAngle: 0.0,
+    rotationOrigin: 'center center',
+    icon: L.icon({
+        iconUrl: 'markers/reference_2.svg',
+        iconSize: [22.799999999999997, 22.799999999999997]
+    }),
+            interactive: true,
+        }
+                break;
+            case '3':
+                return {
+            pane: 'pane_reference_2',
+    rotationAngle: 0.0,
+    rotationOrigin: 'center center',
+    icon: L.icon({
+        iconUrl: 'markers/reference_2.svg',
+        iconSize: [26.599999999999998, 26.599999999999998]
+    }),
+            interactive: true,
+        }
+                break;
+            case '4':
+                return {
+            pane: 'pane_reference_2',
+    rotationAngle: 0.0,
+    rotationOrigin: 'center center',
+    icon: L.icon({
+        iconUrl: 'markers/reference_2.svg',
+        iconSize: [26.599999999999998, 26.599999999999998]
+    }),
+            interactive: true,
+        }
+                break;
+            case '5':
+                return {
+            pane: 'pane_reference_2',
+    rotationAngle: 0.0,
+    rotationOrigin: 'center center',
+    icon: L.icon({
+        iconUrl: 'markers/reference_2.svg',
+        iconSize: [26.599999999999998, 26.599999999999998]
+    }),
+            interactive: true,
+        }
+                break;
+            case '6':
+                return {
+            pane: 'pane_reference_2',
+    rotationAngle: 0.0,
+    rotationOrigin: 'center center',
+    icon: L.icon({
+        iconUrl: 'markers/reference_2.svg',
+        iconSize: [26.599999999999998, 26.599999999999998]
+    }),
+            interactive: true,
+        }
+                break;
+            case '7':
+                return {
+            pane: 'pane_reference_2',
+    rotationAngle: 0.0,
+    rotationOrigin: 'center center',
+    icon: L.icon({
+        iconUrl: 'markers/reference_2.svg',
+        iconSize: [26.599999999999998, 26.599999999999998]
+    }),
+            interactive: true,
+        }
+                break;
+            case '8':
+                return {
+            pane: 'pane_reference_2',
+    rotationAngle: 0.0,
+    rotationOrigin: 'center center',
+    icon: L.icon({
+        iconUrl: 'markers/reference_2.svg',
+        iconSize: [22.799999999999997, 22.799999999999997]
+    }),
+            interactive: true,
+        }
+                break;
+            case '9':
+                return {
+            pane: 'pane_reference_2',
+    rotationAngle: 0.0,
+    rotationOrigin: 'center center',
+    icon: L.icon({
+        iconUrl: 'markers/reference_2.svg',
+        iconSize: [26.599999999999998, 26.599999999999998]
+    }),
+            interactive: true,
+        }
+                break;
+            case '10':
+                return {
+            pane: 'pane_reference_2',
+    rotationAngle: 0.0,
+    rotationOrigin: 'center center',
+    icon: L.icon({
+        iconUrl: 'markers/reference_2.svg',
+        iconSize: [26.599999999999998, 26.599999999999998]
+    }),
+            interactive: true,
+        }
+                break;
+            case '11':
+                return {
+            pane: 'pane_reference_2',
+    rotationAngle: 0.0,
+    rotationOrigin: 'center center',
+    icon: L.icon({
+        iconUrl: 'markers/reference_2.svg',
+        iconSize: [26.599999999999998, 26.599999999999998]
+    }),
+            interactive: true,
+        }
+                break;
+            case '12':
+                return {
+            pane: 'pane_reference_2',
+    rotationAngle: 0.0,
+    rotationOrigin: 'center center',
+    icon: L.icon({
+        iconUrl: 'markers/reference_2.svg',
+        iconSize: [26.599999999999998, 26.599999999999998]
+    }),
+            interactive: true,
+        }
+                break;
+            case '13':
+                return {
+            pane: 'pane_reference_2',
+    rotationAngle: 0.0,
+    rotationOrigin: 'center center',
+    icon: L.icon({
+        iconUrl: 'markers/reference_2.svg',
+        iconSize: [26.599999999999998, 26.599999999999998]
+    }),
+            interactive: true,
+        }
+                break;
+            case '14':
+                return {
+            pane: 'pane_reference_2',
+    rotationAngle: 0.0,
+    rotationOrigin: 'center center',
+    icon: L.icon({
+        iconUrl: 'markers/reference_2.svg',
+        iconSize: [26.599999999999998, 26.599999999999998]
+    }),
+            interactive: true,
+        }
+                break;
+            case '15':
+                return {
+            pane: 'pane_reference_2',
+    rotationAngle: 0.0,
+    rotationOrigin: 'center center',
+    icon: L.icon({
+        iconUrl: 'markers/reference_2.svg',
+        iconSize: [26.599999999999998, 26.599999999999998]
+    }),
+            interactive: true,
+        }
+                break;
+            case '16':
+                return {
+            pane: 'pane_reference_2',
+    rotationAngle: 0.0,
+    rotationOrigin: 'center center',
+    icon: L.icon({
+        iconUrl: 'markers/reference_2.svg',
+        iconSize: [26.599999999999998, 26.599999999999998]
+    }),
+            interactive: true,
+        }
+                break;
+            case '17':
+                return {
+            pane: 'pane_reference_2',
+    rotationAngle: 0.0,
+    rotationOrigin: 'center center',
+    icon: L.icon({
+        iconUrl: 'markers/reference_2.svg',
+        iconSize: [26.599999999999998, 26.599999999999998]
+    }),
+            interactive: true,
+        }
+                break;
+            case '18':
+                return {
+            pane: 'pane_reference_2',
+    rotationAngle: 0.0,
+    rotationOrigin: 'center center',
+    icon: L.icon({
+        iconUrl: 'markers/reference_2.svg',
+        iconSize: [26.599999999999998, 26.599999999999998]
+    }),
+            interactive: true,
+        }
+                break;
+            case '19':
+                return {
+            pane: 'pane_reference_2',
+    rotationAngle: 0.0,
+    rotationOrigin: 'center center',
+    icon: L.icon({
+        iconUrl: 'markers/reference_2.svg',
+        iconSize: [26.599999999999998, 26.599999999999998]
+    }),
+            interactive: true,
+        }
+                break;
+            case '20':
+                return {
+            pane: 'pane_reference_2',
+    rotationAngle: 0.0,
+    rotationOrigin: 'center center',
+    icon: L.icon({
+        iconUrl: 'markers/reference_2.svg',
+        iconSize: [26.599999999999998, 26.599999999999998]
+    }),
+            interactive: true,
+        }
+                break;
+            case '22':
+                return {
+            pane: 'pane_reference_2',
+    rotationAngle: 0.0,
+    rotationOrigin: 'center center',
+    icon: L.icon({
+        iconUrl: 'markers/reference_2.svg',
+        iconSize: [26.599999999999998, 26.599999999999998]
+    }),
+            interactive: true,
+        }
+                break;
+            case '23':
+                return {
+            pane: 'pane_reference_2',
+    rotationAngle: 0.0,
+    rotationOrigin: 'center center',
+    icon: L.icon({
+        iconUrl: 'markers/reference_2.svg',
+        iconSize: [26.599999999999998, 26.599999999999998]
+    }),
+            interactive: true,
+        }
+                break;
+            case '24':
+                return {
+            pane: 'pane_reference_2',
+    rotationAngle: 0.0,
+    rotationOrigin: 'center center',
+    icon: L.icon({
+        iconUrl: 'markers/reference_2.svg',
+        iconSize: [26.599999999999998, 26.599999999999998]
+    }),
+            interactive: true,
+        }
+                break;
+            case '25':
+                return {
+            pane: 'pane_reference_2',
+    rotationAngle: 0.0,
+    rotationOrigin: 'center center',
+    icon: L.icon({
+        iconUrl: 'markers/reference_2.svg',
+        iconSize: [26.599999999999998, 26.599999999999998]
+    }),
+            interactive: true,
+        }
+                break;
+            case '26':
+                return {
+            pane: 'pane_reference_2',
+    rotationAngle: 0.0,
+    rotationOrigin: 'center center',
+    icon: L.icon({
+        iconUrl: 'markers/reference_2.svg',
+        iconSize: [26.599999999999998, 26.599999999999998]
+    }),
+            interactive: true,
+        }
+                break;
+            case '27':
+                return {
+            pane: 'pane_reference_2',
+    rotationAngle: 0.0,
+    rotationOrigin: 'center center',
+    icon: L.icon({
+        iconUrl: 'markers/reference_2.svg',
+        iconSize: [26.599999999999998, 26.599999999999998]
+    }),
+            interactive: true,
+        }
+                break;
+            case '29':
+                return {
+            pane: 'pane_reference_2',
+    rotationAngle: 0.0,
+    rotationOrigin: 'center center',
+    icon: L.icon({
+        iconUrl: 'markers/reference_2.svg',
+        iconSize: [26.599999999999998, 26.599999999999998]
+    }),
+            interactive: true,
+        }
+                break;
+            case '28':
+                return {
+            pane: 'pane_reference_2',
+    rotationAngle: 0.0,
+    rotationOrigin: 'center center',
+    icon: L.icon({
+        iconUrl: 'markers/reference_2.svg',
+        iconSize: [26.599999999999998, 26.599999999999998]
+    }),
+            interactive: true,
+        }
+                break;
+            default:
+                return {
+            pane: 'pane_reference_2',
+    rotationAngle: 0.0,
+    rotationOrigin: 'center center',
+    icon: L.icon({
+        iconUrl: 'markers/reference_2.svg',
+        iconSize: [26.599999999999998, 26.599999999999998]
+    }),
+            interactive: true,
+        }
+                break;
+        }
+    }
+    map.createPane('pane_reference_2');
+    map.getPane('pane_reference_2').style.zIndex = 402;
+    map.getPane('pane_reference_2').style['mix-blend-mode'] = 'normal';
+    var layer_reference_2 = new L.geoJson(json_reference_2, {
+        attribution: '',
+        interactive: true,
+        dataVar: 'json_reference_2',
+        layerName: 'layer_reference_2',
+        pane: 'pane_reference_2',
+        onEachFeature: pop_reference_2,
+        pointToLayer: function (feature, latlng) {
+            var context = {
+                feature: feature,
+                variables: {}
+            };
+            return L.marker(latlng, style_reference_2_0(feature));
+        },
+    });
+    bounds_group.addLayer(layer_reference_2);
+    map.addLayer(layer_reference_2);
+    var osmGeocoder = new L.Control.Geocoder({
+        collapsed: true,
+        position: 'topleft',
+        text: 'Search',
+        title: 'Testing'
+    }).addTo(map);
+    document.getElementsByClassName('leaflet-control-geocoder-icon')[0]
+    .className += ' fa fa-search';
+    document.getElementsByClassName('leaflet-control-geocoder-icon')[0]
+    .title += 'Search for a place';
+    var overlaysTree = [
+        {label: 'reference<br /><table><tr><td style="text-align: center;"><img src="legend/reference_2_10.png" /></td><td>1</td></tr><tr><td style="text-align: center;"><img src="legend/reference_2_21.png" /></td><td>2</td></tr><tr><td style="text-align: center;"><img src="legend/reference_2_32.png" /></td><td>3</td></tr><tr><td style="text-align: center;"><img src="legend/reference_2_43.png" /></td><td>4</td></tr><tr><td style="text-align: center;"><img src="legend/reference_2_54.png" /></td><td>5</td></tr><tr><td style="text-align: center;"><img src="legend/reference_2_65.png" /></td><td>6</td></tr><tr><td style="text-align: center;"><img src="legend/reference_2_76.png" /></td><td>7</td></tr><tr><td style="text-align: center;"><img src="legend/reference_2_87.png" /></td><td>8</td></tr><tr><td style="text-align: center;"><img src="legend/reference_2_98.png" /></td><td>9</td></tr><tr><td style="text-align: center;"><img src="legend/reference_2_109.png" /></td><td>10</td></tr><tr><td style="text-align: center;"><img src="legend/reference_2_1110.png" /></td><td>11</td></tr><tr><td style="text-align: center;"><img src="legend/reference_2_1211.png" /></td><td>12</td></tr><tr><td style="text-align: center;"><img src="legend/reference_2_1312.png" /></td><td>13</td></tr><tr><td style="text-align: center;"><img src="legend/reference_2_1413.png" /></td><td>14</td></tr><tr><td style="text-align: center;"><img src="legend/reference_2_1514.png" /></td><td>15</td></tr><tr><td style="text-align: center;"><img src="legend/reference_2_1615.png" /></td><td>16</td></tr><tr><td style="text-align: center;"><img src="legend/reference_2_1716.png" /></td><td>17</td></tr><tr><td style="text-align: center;"><img src="legend/reference_2_1817.png" /></td><td>18</td></tr><tr><td style="text-align: center;"><img src="legend/reference_2_1918.png" /></td><td>19</td></tr><tr><td style="text-align: center;"><img src="legend/reference_2_2019.png" /></td><td>20</td></tr><tr><td style="text-align: center;"><img src="legend/reference_2_2220.png" /></td><td>22</td></tr><tr><td style="text-align: center;"><img src="legend/reference_2_2321.png" /></td><td>23</td></tr><tr><td style="text-align: center;"><img src="legend/reference_2_2422.png" /></td><td>24</td></tr><tr><td style="text-align: center;"><img src="legend/reference_2_2523.png" /></td><td>25</td></tr><tr><td style="text-align: center;"><img src="legend/reference_2_2624.png" /></td><td>26</td></tr><tr><td style="text-align: center;"><img src="legend/reference_2_2725.png" /></td><td>27</td></tr><tr><td style="text-align: center;"><img src="legend/reference_2_2926.png" /></td><td>29</td></tr><tr><td style="text-align: center;"><img src="legend/reference_2_2827.png" /></td><td>28</td></tr><tr><td style="text-align: center;"><img src="legend/reference_2_28.png" /></td><td></td></tr></table>', layer: layer_reference_2},
+        {label: 'TRAJETS<br /><table><tr><td style="text-align: center;"><img src="legend/TRAJETS_1_RENDPOINTVERSSTATIONSERVICE0.png" /></td><td>REND-POINT VERS STATION-SERVICE</td></tr><tr><td style="text-align: center;"><img src="legend/TRAJETS_1_RENDPOINTVERSGRANDTAXI1.png" /></td><td>REND-POINT VERS GRAND TAXI</td></tr><tr><td style="text-align: center;"><img src="legend/TRAJETS_1_RENDPOINVERSGRANDTAXI2.png" /></td><td>REND-POIN VERS GRAND TAXI</td></tr><tr><td style="text-align: center;"><img src="legend/TRAJETS_1_RENDPOINTVERSMOSQUEE3.png" /></td><td>REND POINT VERS MOSQUEE</td></tr><tr><td style="text-align: center;"><img src="legend/TRAJETS_1_IGLISIA4.png" /></td><td>IGLISIA</td></tr><tr><td style="text-align: center;"><img src="legend/TRAJETS_1_STATIONSERVICE5.png" /></td><td>STATION-SERVICE</td></tr><tr><td style="text-align: center;"><img src="legend/TRAJETS_1_IGLISIA6.png" /></td><td>IGLISIA</td></tr><tr><td style="text-align: center;"><img src="legend/TRAJETS_1_RENDPOINTVERSPARKING7.png" /></td><td>REND-POINT VERS PARKING</td></tr><tr><td style="text-align: center;"><img src="legend/TRAJETS_1_8.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/TRAJETS_1_RENDPOINTVERSPARKING29.png" /></td><td>REND-POINT VERS PARKING 2</td></tr><tr><td style="text-align: center;"><img src="legend/TRAJETS_1_RENDPOINTVERSHOTELGOLDEN10.png" /></td><td>REND-POINT VERS HOTEL GOLDEN</td></tr><tr><td style="text-align: center;"><img src="legend/TRAJETS_1_RENDPOINTVERSRESTAURANTNOURCHAMS11.png" /></td><td>REND-POINT VERS RESTAURANT NOUR CHAMS</td></tr><tr><td style="text-align: center;"><img src="legend/TRAJETS_1_RENDPOINTVERSJARDIN12.png" /></td><td>REND-POINT VERS JARDIN</td></tr><tr><td style="text-align: center;"><img src="legend/TRAJETS_1_RENDPOINTVERSTERRAINDEFOOT13.png" /></td><td>REND-POINT VERS TERRAIN DE FOOT</td></tr><tr><td style="text-align: center;"><img src="legend/TRAJETS_1_RENDPOINTVERSPROTECTIONCIVILE14.png" /></td><td>REND-POINT VERS PROTECTION CIVILE</td></tr><tr><td style="text-align: center;"><img src="legend/TRAJETS_1_RENDPOINTVERSRESTAURANTLORIZON15.png" /></td><td>REND-POINT VERS RESTAURANT LORIZON</td></tr></table>', layer: layer_TRAJETS_1},
+        {label: 'places<br /><table><tr><td style="text-align: center;"><img src="legend/places_0_HT0.png" /></td><td>HT</td></tr><tr><td style="text-align: center;"><img src="legend/places_0_RS1.png" /></td><td>RS</td></tr><tr><td style="text-align: center;"><img src="legend/places_0_PR2.png" /></td><td>PR</td></tr><tr><td style="text-align: center;"><img src="legend/places_0_IG3.png" /></td><td>IG</td></tr><tr><td style="text-align: center;"><img src="legend/places_0_PC4.png" /></td><td>PC</td></tr><tr><td style="text-align: center;"><img src="legend/places_0_BK5.png" /></td><td>BK</td></tr><tr><td style="text-align: center;"><img src="legend/places_0_JR6.png" /></td><td>JR</td></tr><tr><td style="text-align: center;"><img src="legend/places_0_TL7.png" /></td><td>TL</td></tr><tr><td style="text-align: center;"><img src="legend/places_0_FR8.png" /></td><td>FR</td></tr><tr><td style="text-align: center;"><img src="legend/places_0_GT9.png" /></td><td>GT</td></tr><tr><td style="text-align: center;"><img src="legend/places_0_BANK10.png" /></td><td>BANK</td></tr><tr><td style="text-align: center;"><img src="legend/places_0_TF11.png" /></td><td>TF</td></tr><tr><td style="text-align: center;"><img src="legend/places_0_MS12.png" /></td><td>MS</td></tr><tr><td style="text-align: center;"><img src="legend/places_0_MST13.png" /></td><td>MST</td></tr><tr><td style="text-align: center;"><img src="legend/places_0_MG14.png" /></td><td>MG</td></tr><tr><td style="text-align: center;"><img src="legend/places_0_SS15.png" /></td><td>SS</td></tr><tr><td style="text-align: center;"><img src="legend/places_0_PH16.png" /></td><td>PH</td></tr></table>', layer: layer_places_0},]
+    var lay = L.control.layers.tree(null, overlaysTree,{
+        //namedToggle: true,
+        //selectorBack: false,
+        //closedSymbol: '&#8862; &#x1f5c0;',
+        //openedSymbol: '&#8863; &#x1f5c1;',
+        //collapseAll: 'Collapse all',
+        //expandAll: 'Expand all',
+        collapsed: false, 
+    });
+    lay.addTo(map);
+    document.addEventListener("DOMContentLoaded", function() {
+        // set new Layers List height which considers toggle icon
+        function newLayersListHeight() {
+            var layerScrollbarElement = document.querySelector('.leaflet-control-layers-scrollbar');
+            if (layerScrollbarElement) {
+                var layersListElement = document.querySelector('.leaflet-control-layers-list');
+                var originalHeight = layersListElement.style.height 
+                    || window.getComputedStyle(layersListElement).height;
+                var newHeight = parseFloat(originalHeight) - 50;
+                layersListElement.style.height = newHeight + 'px';
+            }
+        }
+        var isLayersListExpanded = true;
+        var controlLayersElement = document.querySelector('.leaflet-control-layers');
+        var toggleLayerControl = document.querySelector('.leaflet-control-layers-toggle');
+        // toggle Collapsed/Expanded and apply new Layers List height
+        toggleLayerControl.addEventListener('click', function() {
+            if (isLayersListExpanded) {
+                controlLayersElement.classList.remove('leaflet-control-layers-expanded');
+            } else {
+                controlLayersElement.classList.add('leaflet-control-layers-expanded');
+            }
+            isLayersListExpanded = !isLayersListExpanded;
+            newLayersListHeight()
+        });	
+        // apply new Layers List height if toggle layerstree
+        if (controlLayersElement) {
+            controlLayersElement.addEventListener('click', function(event) {
+                var toggleLayerHeaderPointer = event.target.closest('.leaflet-layerstree-header-pointer span');
+                if (toggleLayerHeaderPointer) {
+                    newLayersListHeight();
+                }
+            });
+        }
+        // Collapsed/Expanded at Start to apply new height
+        setTimeout(function() {
+            toggleLayerControl.click();
+        }, 10);
+        setTimeout(function() {
+            toggleLayerControl.click();
+        }, 10);
+        // Collapsed touch/small screen
+        var isSmallScreen = window.innerWidth < 650;
+        if (isSmallScreen) {
+            setTimeout(function() {
+                controlLayersElement.classList.remove('leaflet-control-layers-expanded');
+                isLayersListExpanded = !isLayersListExpanded;
+            }, 500);
+        }  
+    });       
+    setBounds();
+    var i = 0;
+    layer_places_0.eachLayer(function(layer) {
+        var context = {
+            feature: layer.feature,
+            variables: {}
+        };
+        layer.bindTooltip((layer.feature.properties['places'] !== null?String('<div style="color: #000000; font-size: 10pt; font-family: \'MS Shell Dlg 2\', sans-serif;">' + layer.feature.properties['places']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_places_0'});
+        labels.push(layer);
+        totalMarkers += 1;
+          layer.added = true;
+          addLabel(layer, i);
+          i++;
+    });
+    resetLabels([layer_places_0]);
+    map.on("zoomend", function(){
+        resetLabels([layer_places_0]);
+    });
+    map.on("layeradd", function(){
+        resetLabels([layer_places_0]);
+    });
+    map.on("layerremove", function(){
+        resetLabels([layer_places_0]);
+    });
+    </script>
+</body>
+</html>
